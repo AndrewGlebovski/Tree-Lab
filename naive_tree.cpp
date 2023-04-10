@@ -4,7 +4,9 @@
 #include <time.h>
 
 
-const size_t ARRAY_SIZE = 100000;
+const size_t MIN_ARRAY_SIZE = 100000;
+const size_t MAX_ARRAY_SIZE = 1000000;
+const size_t STEP = 100000;
 const size_t TEST_COUNT = 20;
 
 
@@ -26,13 +28,13 @@ int tree_destructor(Tree *tree);
 
 int tree_insert(Tree *tree, data_t key);
 
-int tree_erase(Tree *tree, data_t key);
+int tree_remove(Tree *tree, data_t key);
 
 Node *node_constructor(data_t key);
 
 void node_destructor(Node *node);
 
-Node *node_erase(Node *node, data_t key);
+Node *node_remove(Node *node, data_t key);
 
 Node *node_min(Node *node);
 
@@ -42,38 +44,40 @@ Node *node_min(Node *node);
 int main() {
     srand(time(NULL));
 
-    data_t *arr = (data_t *) calloc(ARRAY_SIZE, sizeof(data_t));
+    data_t *arr = (data_t *) calloc(MAX_ARRAY_SIZE, sizeof(data_t));
 
     double result_insert_time = 0, result_erase_time = 0;
 
-    for (size_t test = 0; test < TEST_COUNT; test++) {
-        for (size_t i = 0; i < ARRAY_SIZE; i++) arr[i] = rand();
+    for (size_t size = MIN_ARRAY_SIZE; size <= MAX_ARRAY_SIZE; size += STEP) {
+        for (size_t test = 0; test < TEST_COUNT; test++) {
+            for (size_t i = 0; i < size; i++) arr[i] = rand();
 
-        Tree tree = {};
-        tree_constructor(&tree);
+            Tree tree = {};
+            tree_constructor(&tree);
 
-        clock_t t1 = clock();
+            clock_t t1 = clock();
 
-        for (size_t i = 0; i < ARRAY_SIZE; i++)
-            tree_insert(&tree, arr[i]);
+            for (size_t i = 0; i < size; i++)
+                tree_insert(&tree, arr[i]);
 
-        clock_t t2 = clock();
+            clock_t t2 = clock();
 
-        result_insert_time += 1000.0 * (t2 - t1) / CLOCKS_PER_SEC;
+            result_insert_time += 1000.0 * (t2 - t1) / CLOCKS_PER_SEC;
 
-        t1 = clock();
+            t1 = clock();
 
-        for (size_t i = 0; i < ARRAY_SIZE / 2; i++)
-            tree_erase(&tree, arr[(size_t) rand() % ARRAY_SIZE]);
+            for (size_t i = 0; i < size / 2; i++)
+                tree_remove(&tree, arr[(size_t) rand() % size]);
 
-        t2 = clock();
+            t2 = clock();
 
-        result_erase_time += 1000.0 * (t2 - t1) / CLOCKS_PER_SEC;
+            result_erase_time += 1000.0 * (t2 - t1) / CLOCKS_PER_SEC;
 
-        tree_destructor(&tree);
+            tree_destructor(&tree);
+        }
+
+        printf("Size: %lu\nInsert time: %lf\nErase time: %lf\n", size, result_insert_time / TEST_COUNT, result_erase_time / TEST_COUNT);
     }
-
-    printf("Insert time: %lf\nErase time: %lf\n", result_insert_time / TEST_COUNT, result_erase_time / TEST_COUNT);
 
     free(arr);
 
@@ -136,10 +140,10 @@ int tree_insert(Tree *tree, data_t key) {
 }
 
 
-int tree_erase(Tree *tree, data_t key) {
+int tree_remove(Tree *tree, data_t key) {
     assert(tree && "Can't erase in null ptr!\n");
 
-    tree -> root = node_erase(tree -> root, key);
+    tree -> root = node_remove(tree -> root, key);
 
     return 0;
 }
@@ -166,18 +170,18 @@ void node_destructor(Node *node) {
 }
 
 
-Node *node_erase(Node *node, data_t key) {
+Node *node_remove(Node *node, data_t key) {
     if (!node) return nullptr;
 
     if (key > node -> key) {
-        node -> right = node_erase(node -> right, key);
+        node -> right = node_remove(node -> right, key);
     }
     else if (key < node -> key) {
-        node -> left = node_erase(node -> left, key);
+        node -> left = node_remove(node -> left, key);
     }
     else if (node -> left && node -> right) {
         node -> key = node_min(node -> right) -> key;
-        node -> right = node_erase(node -> right, node -> key);
+        node -> right = node_remove(node -> right, node -> key);
     }
     else {
         if (node -> left) node = node -> left;
