@@ -54,7 +54,7 @@ int main() {
 
         clock_t t1 = clock();
 
-        for (int i = 0; i < ARRAY_SIZE; i++)
+        for (size_t i = 0; i < ARRAY_SIZE; i++)
             tree_insert(&tree, arr[i]);
 
         clock_t t2 = clock();
@@ -63,7 +63,7 @@ int main() {
 
         t1 = clock();
 
-        for (int i = 0; i < ARRAY_SIZE / 2; i++)
+        for (size_t i = 0; i < ARRAY_SIZE / 2; i++)
             tree_erase(&tree, arr[(size_t) rand() % ARRAY_SIZE]);
 
         t2 = clock();
